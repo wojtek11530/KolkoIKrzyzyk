@@ -28,9 +28,11 @@ public class Menu implements GameEventsListener {
 
     private static void uruchomGre() {
         Menu menu = new Menu();
+        System.out.println("Podaj wielkość plannszy");
+        int size=menu.obtainInteger();
         TicTacToeGame game = TicTacToeImpl.builder()
                 .gameListeners(menu)
-                .boardDimensions(3, 3)
+                .boardDimensions(size, size)
                 .build();
         game.startGame();
     }
@@ -49,5 +51,21 @@ public class Menu implements GameEventsListener {
     @Override
     public void playerWinAGame(Player player) {
         //TODO: Informacja o wygraniu przez gracza
+        System.out.println("Koniec gry\nWygrał gracz "+player.getSign());
+    }
+
+    @Override
+    public int obtainInteger(){
+        int number=-1;
+        boolean isCorrect=false;
+        while(!isCorrect) {
+            try {
+                number = Integer.valueOf(getUserInput());
+                isCorrect = true;
+            } catch (NumberFormatException nfe) {
+                System.out.println("Wyjątek - zły format liczby");
+            }
+        }
+        return number;
     }
 }
