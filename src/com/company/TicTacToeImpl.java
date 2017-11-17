@@ -1,9 +1,6 @@
 package com.company;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
-import java.util.Scanner;
 
 public class TicTacToeImpl implements TicTacToeGame {
 
@@ -18,13 +15,16 @@ public class TicTacToeImpl implements TicTacToeGame {
 
     private Character[][] gameBoard;
 
-    private Player playerX = Player.CROSS;
-    private Player playerO = Player.CIRCLE;
+    private Player player1;
+    private Player player2;
+    private Player currentPlayer;
 
-    private TicTacToeImpl(int boardWidth, int boardHeight, GameEventsListener gameEventsListener) {
+    private TicTacToeImpl(int boardWidth, int boardHeight, GameEventsListener gameEventsListener, Player player1, Player player2) {
         this.gameEventListener = gameEventsListener;
         this.boardWidth=boardWidth;
         this.boardHeight=boardHeight;
+        this.player1 = player1;
+        this.player2 = player2;
         initGameBoard(boardWidth, boardHeight);
 
     }
@@ -47,21 +47,7 @@ public class TicTacToeImpl implements TicTacToeGame {
     }
 
 
-    public void putX(int x, int y) {
-        if (this.gameBoard[x - 1][y - 1] != ' ') {
-            System.out.println("Pole zajęte");
-        } else {
-            this.gameBoard[x - 1][y - 1] = 'X';
-        }
-    }
 
-    public void putO(int x, int y) {
-        if (this.gameBoard[x - 1][y - 1] != ' ') {
-            System.out.println("Pole zajęte");
-        } else {
-            this.gameBoard[x - 1][y - 1] = 'O';
-        }
-    }
 
     @Override
     public Optional<Player> findWinner() {
@@ -94,16 +80,16 @@ public class TicTacToeImpl implements TicTacToeGame {
                 }
             }
             if (!(rows[0].equals(DEFAULT_BOARD_CHARACTER)) && areRowsTheSame) {
-                if (rows[0].equals(playerX.getSign())) {
-                    return playerX;
+                if (rows[0].equals(player1.getSign())) {
+                    return player1;
                 } else {
-                    return playerO;
+                    return player2;
                 }
             } else if (!(columns[0].equals(DEFAULT_BOARD_CHARACTER)) && areColumnsTheSame) {
-                if (columns[0].equals(playerX.getSign())) {
-                    return playerX;
+                if (columns[0].equals(player1.getSign())) {
+                    return player1;
                 } else {
-                    return playerO;
+                    return player2;
                 }
             }
         }
@@ -126,10 +112,10 @@ public class TicTacToeImpl implements TicTacToeGame {
                 isDiagonalOneTheSame) || (
                 !gameBoard[0][2].equals(DEFAULT_BOARD_CHARACTER) &&
                         isDiagonalTwoTheSame)) {
-            if (gameBoard[1][1].equals(playerX.getSign())) {
-                return playerX;
+            if (gameBoard[1][1].equals(player1.getSign())) {
+                return player1;
             } else {
-                return playerO;
+                return player2;
             }
         } else {
             return null;
@@ -141,26 +127,10 @@ public class TicTacToeImpl implements TicTacToeGame {
         coordinate=gameEventListener.obtainInteger();
 
         while (coordinate < 1 || coordinate > boardHeight) {
-            System.out.println("Podano błędną współrzędną. Podaj ją jeszcze raz");
+            gameEventListener.infoAboutWrongCoordinate();
             coordinate = gameEventListener.obtainInteger();
         }
         return coordinate;
-    }
-
-    public void printTheBoard(){
-        System.out.print("  ");
-        for (int j=0;j<boardWidth;j++) {
-            System.out.print(j+1+" ");
-        }
-        System.out.println("");
-        for (int i=0;i<boardHeight;i++) {
-            System.out.print(i+1);
-            for (int j=0;j<boardWidth;j++) {
-                System.out.print(" "+this.getGameBoard()[i][j]);
-            }
-            System.out.println("");
-        }
-        System.out.println("\n");
     }
 
     public boolean isBoardFull(){
@@ -174,61 +144,75 @@ public class TicTacToeImpl implements TicTacToeGame {
         return true;
     }
 
+
+    public void nextTurn(Player player){
+        int y = 0;
+        int x = 0;
+        if (player.getisReal()) {
+            gameEventListener.infoAboutPlayer(player);
+            gameEventListener.infoAboutFirstCoordinate();
+            x = newCoordinate();
+            gameEventListener.infoAboutSecondCoordinate();
+            y = newCoordinate();
+            while (!putSign(player.getSign(), x, y)) {
+                gameEventListener.fieldOccupied(x,y);
+                gameEventListener.boardInitialized(this.getGameBoard());
+                gameEventListener.infoAboutPlayer(player);
+                gameEventListener.infoAboutFirstCoordinate();
+                x = newCoordinate();
+                gameEventListener.infoAboutSecondCoordinate();
+                y = newCoordinate();
+            }
+        }
+        else{
+            gameEventListener.infoAboutPlayer(player);
+            x = 1 + (int)Math.floor(boardHeight*Math.random());
+            y = 1 + (int)Math.floor(boardWidth*Math.random());
+            while (!putSign(player.getSign(), x, y)) {
+                x = 1 + (int)Math.floor(boardHeight*Math.random());
+                y = 1 + (int)Math.floor(boardWidth*Math.random());
+            }
+        }
+        if (player.equals(player1)){
+            this.currentPlayer= player2;
+        }
+        else{
+            this.currentPlayer= player1;
+        }
+        gameEventListener.boardInitialized(this.getGameBoard());
+    }
+
     @Override
     public void startGame() {
-        float whichPlayer = (Math.round(Math.random()));
-
+        if((Math.round(Math.random())) % 2 == 0) {
+            currentPlayer = player1;
+        }
+        else {
+            currentPlayer = player2;
+        }
         do {
-            int y = 0;
-            int x = 0;
-            if (whichPlayer % 2 == 0) {
-                printTheBoard();
-                System.out.println("Gracz X");
-                System.out.println("Podaj pierwszą współrzędną");
-                x = newCoordinate();
-                System.out.println("Podaj drugą współrzędną");
-                y = newCoordinate();
-                while (!gameBoard[x - 1][y - 1].equals(DEFAULT_BOARD_CHARACTER)) {
-                    System.out.println("Pole jest już zajęte, podaj współrzędne jeszcze raz");
-                    System.out.println("Gracz X");
-                    System.out.println("Podaj pierwszą współrzędną");
-                    x = newCoordinate();
-                    System.out.println("Podaj drugą współrzędną");
-                    y = newCoordinate();
-                }
-                this.putX(x, y);
-                whichPlayer++;
-            }
-            else {
-                printTheBoard();
-                System.out.println("Gracz O");
-                System.out.println("Podaj pierwszą współrzędną");
-                x = newCoordinate();
-                System.out.println("Podaj drugą współrzędną");
-                y = newCoordinate();
-                while (!gameBoard[x - 1][y - 1].equals(DEFAULT_BOARD_CHARACTER)) {
-                    System.out.println("Pole jest już zajęte, podaj współrzędne jeszcze raz");
-                    System.out.println("Gracz O");
-                    System.out.println("Podaj pierwszą współrzędną");
-                    x = newCoordinate();
-                    System.out.println("Podaj drugą współrzędną");
-                    y = newCoordinate();
-                }
-                this.putO(x, y);
-                whichPlayer--;
-
-            }
-
-
-
+            nextTurn(currentPlayer);
         } while (!findWinner().isPresent() && !isBoardFull());
         if (findWinner().isPresent()){
             gameEventListener.playerWinAGame(this.findWinnerPlayer());
         }
         else {
-            System.out.println("Cała plansza jest zajęta. Brak zwycięzcy");
+            gameEventListener.infoAboutLacfOfWinner();
         }
     }
+
+    @Override
+    public boolean putSign(Character userSign, int x, int y) {
+        //TODO: Tutaj zapisanie wartosci, false jesli jest zle
+        if(this.gameBoard[x - 1][y - 1] != DEFAULT_BOARD_CHARACTER) {
+            return false;
+        }
+        else{
+            this.gameBoard[x - 1][y - 1] = userSign;
+        }
+        return true;
+    }
+
 
     public static TicTacToeBuilder builder() {
         return new TicTacToeBuilder();
@@ -245,6 +229,8 @@ public class TicTacToeImpl implements TicTacToeGame {
 
         private int boardHeight, boardWidth;
         private GameEventsListener gameEventListener;
+        private Player player1;
+        private Player player2;
 
         private TicTacToeBuilder() {
             boardHeight = DEFAULT_BOARD_HEIGHT;
@@ -262,8 +248,14 @@ public class TicTacToeImpl implements TicTacToeGame {
             return this;
         }
 
+        public TicTacToeBuilder players(Player player1, Player player2){
+            this.player1=player1;
+            this.player2=player2;
+            return this;
+        }
+
         public TicTacToeImpl build() {
-            return new TicTacToeImpl(boardWidth, boardHeight, gameEventListener);
+            return new TicTacToeImpl(boardWidth, boardHeight, gameEventListener, player1, player2);
         }
     }
 }

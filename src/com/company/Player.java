@@ -1,16 +1,25 @@
 package com.company;
 
-public enum Player {
-    CIRCLE('O'),
-    CROSS('X');
+abstract class Player{
+    private final String name;
+    private final Character Sign;
+    private final boolean isReal;
 
-    Player(Character sign) {
-        this.sign = sign;
+    public boolean getisReal() {
+        return isReal;
     }
 
-    private final Character sign;
+    public String getName() {
+        return name;
+    }
 
     public Character getSign() {
-        return sign;
+        return Sign;
+    }
+
+    public Player(String name, Character Sign, boolean isReal){
+        this.name=name;
+        this.Sign = Sign;
+        this.isReal = isReal;
     }
 }
